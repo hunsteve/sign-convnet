@@ -34,12 +34,13 @@ Eigen::MatrixXf FullyConnectedLayer::backprop(const Eigen::MatrixXf& error){
 		sDiff = (s.array() > 0).select(error,0); //ReLU derivative
 
 	deltaW = inp.transpose() * sDiff;
-	deltaB = sDiff;
+	deltaB = Eigen::VectorXf::Ones(sDiff.rows()).transpose() * sDiff;
 
 	return sDiff * w.transpose();
 }
 
 void FullyConnectedLayer::applyWeightMod(float mu){
+	//TODO: ADAM
 	w += deltaW * mu;
 	b += deltaB * mu;
 }

@@ -23,7 +23,7 @@ public:
 	void calcDeltas(const Eigen::MatrixXf& error);
 	void applyWeightMod(float mu);
 
-	void train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY, int maxEpoch, float mu, float ratio, bool isDebug);
+	void train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY, int maxEpoch, float mu, float ratio, int minibatchSize, bool isDebug);
 
 	void addConvLayer();
 	void addFCLayer(int size, bool isLinear=false);

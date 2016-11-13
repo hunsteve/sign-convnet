@@ -8,6 +8,7 @@
 #include "NN.h"
 #include "FullyConnectedLayer.h"
 #include <iostream>
+#include <math.h>
 
 NN::NN(int inputSize) : inputSize(inputSize) {
 }
@@ -38,8 +39,35 @@ void NN::applyWeightMod(float mu) {
 	}
 }
 
-void NN::train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY, int maxEpoch, float mu, float ratio, bool isDebug) {
+void NN::train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY, int maxEpoch, float mu, float ratio, int minibatchSize, bool isDebug) {
+	int trainBatchCount = (int) floor((trainX.rows() / minibatchSize) * ratio);
+	for(int epoch = 0; epoch < maxEpoch; ++epoch) {
+		float trainErrorSum = 0;
+		for(int batch=0; batch<trainBatchCount; ++batch) {
+			Eigen::MatrixXf inp = trainX.block(batch * minibatchSize,0,minibatchSize,trainX.cols());
+			Eigen::MatrixXf targ = trainY.block(batch * minibatchSize,0,minibatchSize,trainY.cols());
+			Eigen::MatrixXf out = forward(inp);
+			Eigen::MatrixXf err = targ - out;
+			calcDeltas(err);
+			applyWeightMod(2*mu);
+			//sumerrtr += err.meanSquared();
+		}
+		float validationErrorSum = 0;
 
+		int validationSize = trainX.rows() - trainBatchCount * minibatchSize;
+		Eigen::MatrixXf inp = trainX.block(trainBatchCount * minibatchSize,0,validationSize,trainX.cols());
+		Eigen::MatrixXf targ = trainY.block(trainBatchCount * minibatchSize,0,validationSize,trainY.cols());
+		Eigen::MatrixXf out = forward(inp);
+		Eigen::MatrixXf err = targ - out;
+		//sumerrvalid += err.meanSquared();
+
+		if (isDebug) {
+			std::cout << "train error:" << (trainErrorSum / trainBatchCount);
+		}
+
+		float MSE = validationErrorSum / validationSize;
+		std::cout << "MSE:" << MSE;
+	}
 }
 
 
