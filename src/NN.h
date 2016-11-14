@@ -9,15 +9,16 @@
 #define NN_H_
 #include <vector>
 #include <string>
-#include <fstream>
+#include <istream>
+#include <ostream>
 #include "Layer.h"
 
 class NN {
 private:
 	std::vector<Layer*> layers;
-	int inputSize;
+	const int inputSize;
 
-	float accuracy(const Eigen::MatrixXf& output, const Eigen::MatrixXf& target);
+	float accuracy(const Eigen::MatrixXf& output, const Eigen::MatrixXf& target) const;
 
 public:
 	NN(int inputSize);
@@ -35,8 +36,8 @@ public:
 	void addConvLayer(int stride, int padding, int K, int N);
 	void addFCLayer(int size, bool isLinear=false);
 
-	void save(std::ofstream& out);
-	static NN load(std::ifstream& in);
+	void save(std::ostream& out) const;
+	static NN load(std::istream& in);
 };
 
 #endif /* NN_H_ */

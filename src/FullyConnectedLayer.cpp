@@ -45,17 +45,17 @@ void FullyConnectedLayer::applyWeightMod(float mu){
 	b += deltaB * mu;
 }
 
-int FullyConnectedLayer::getOutputSize() {
+int FullyConnectedLayer::getOutputSize() const {
 	return w.rows();
 }
 
 
 
-void FullyConnectedLayer::save(std::ofstream& out) {
+void FullyConnectedLayer::save(std::ostream& out) const {
 	out << 'F';
 }
 
-FullyConnectedLayer* FullyConnectedLayer::load(std::ifstream& in) {
+FullyConnectedLayer* FullyConnectedLayer::load(std::istream& in) {
 	FullyConnectedLayer* f = new FullyConnectedLayer(1,1,false);
 	return f;
 }

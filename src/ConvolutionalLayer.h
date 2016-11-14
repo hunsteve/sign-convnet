@@ -9,20 +9,21 @@
 #define CONVOLUTIONALLAYER_H_
 #include "Layer.h"
 #include "Eigen/Sparse"
-#include <fstream>
+#include <istream>
+#include <ostream>
 
 typedef Eigen::SparseMatrix<float> SpMat;
 typedef Eigen::Triplet<float> Triplet;
 
 class ConvolutionalLayer : public Layer {
 private:
-	int width;
-	int height;
-	int dimension;
-	int stride;
-	int padding;
-	int K;
-	int N;
+	const int width;
+	const int height;
+	const int dimension;
+	const int stride;
+	const int padding;
+	const int K;
+	const int N;
 	Eigen::MatrixXf w;
 	Eigen::VectorXf b;
 
@@ -33,7 +34,7 @@ private:
 
 	SpMat X;
 
-	SpMat buildIM2COL();
+	SpMat buildIM2COL() const;
 
 public:
 	ConvolutionalLayer(int w, int h, int d, int stride, int padding, int K, int N);
@@ -41,13 +42,13 @@ public:
 	Eigen::MatrixXf forward(const Eigen::MatrixXf& input);
 	Eigen::MatrixXf backprop(const Eigen::MatrixXf& error);
 	void applyWeightMod(float mu);
-	int getOutputSize();
-	int getOutputWidth();
-	int getOutputHeight();
-	int getOutputDimension();
+	int getOutputSize() const ;
+	int getOutputWidth() const ;
+	int getOutputHeight() const ;
+	int getOutputDimension() const ;
 
-	void save(std::ofstream& out);
-	static ConvolutionalLayer* load(std::ifstream& in);
+	void save(std::ostream& out) const ;
+	static ConvolutionalLayer* load(std::istream& in);
 };
 
 #endif /* CONVOLUTIONALLAYER_H_ */

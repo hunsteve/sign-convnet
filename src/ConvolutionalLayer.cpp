@@ -21,7 +21,7 @@ ConvolutionalLayer::ConvolutionalLayer(int w, int h, int d, int stride, int padd
 }
 
 //Calculate a sparse matrix that does the im2col transformation
-SpMat ConvolutionalLayer::buildIM2COL() {
+SpMat ConvolutionalLayer::buildIM2COL() const {
 
 	int outWidth = getOutputWidth();
 	int outHeight = getOutputHeight();
@@ -131,28 +131,28 @@ void ConvolutionalLayer::applyWeightMod(float mu) {
 	b += deltaB * mu;
 }
 
-int ConvolutionalLayer::getOutputSize() {
+int ConvolutionalLayer::getOutputSize() const {
 	return getOutputWidth() * getOutputHeight() * getOutputDimension();
 }
 
-int ConvolutionalLayer::getOutputWidth() {
+int ConvolutionalLayer::getOutputWidth() const {
 	return (width + padding - K) / stride + 1;
 }
-int ConvolutionalLayer::getOutputHeight() {
+int ConvolutionalLayer::getOutputHeight() const {
 	return (height + padding - K) / stride + 1;
 }
 
-int ConvolutionalLayer::getOutputDimension() {
+int ConvolutionalLayer::getOutputDimension() const {
 	return N;
 }
 
 
 
-void ConvolutionalLayer::save(std::ofstream& out) {
+void ConvolutionalLayer::save(std::ostream& out) const {
 	out << 'C';
 }
 
-ConvolutionalLayer* ConvolutionalLayer::load(std::ifstream& in) {
+ConvolutionalLayer* ConvolutionalLayer::load(std::istream& in) {
 	ConvolutionalLayer* c = new ConvolutionalLayer(1, 1, 1, 1, 1, 1, 1);
 	return c;
 }

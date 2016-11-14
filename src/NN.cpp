@@ -10,19 +10,20 @@
 #include "ConvolutionalLayer.h"
 #include <iostream>
 #include <math.h>
+#include <stddef.h>
 
 NN::NN(int inputSize) : inputSize(inputSize) {
 }
 
 NN::~NN() {
-	for(unsigned int i = 0; i < layers.size(); ++i) {
+	for(size_t i = 0; i < layers.size(); ++i) {
 		delete layers[i];
 	}
 }
 
 Eigen::MatrixXf NN::forward(const Eigen::MatrixXf& input) {
 	Eigen::MatrixXf layerOutput = input;
-	for(unsigned int i = 0; i < layers.size(); ++i) {
+	for(size_t i = 0; i < layers.size(); ++i) {
 		layerOutput = layers[i]->forward(layerOutput);
 	}
 
@@ -31,13 +32,13 @@ Eigen::MatrixXf NN::forward(const Eigen::MatrixXf& input) {
 
 void NN::calcDeltas(const Eigen::MatrixXf& error) {
 	Eigen::MatrixXf backPropError = error;
-	for (unsigned int i=layers.size()-1; i<layers.size(); --i) {
+	for (size_t i=layers.size()-1; i<layers.size(); --i) {
 		backPropError = layers[i]->backprop(backPropError);
 	}
 }
 
 void NN::applyWeightMod(float mu) {
-	for (unsigned int i = 0; i < layers.size(); ++i) {
+	for (size_t i = 0; i < layers.size(); ++i) {
 		layers[i]->applyWeightMod(mu);
 	}
 }
@@ -96,7 +97,7 @@ void NN::addConvLayer(int stride, int padding, int K, int N) {
 
 void NN::addFCLayer(int size, bool isLinear) {
 	int lastSize = 0;
-	if (!layers.size())
+	if (layers.empty())
 		lastSize = inputSize;
 	else
 		lastSize = layers.back()->getOutputSize();
@@ -106,7 +107,7 @@ void NN::addFCLayer(int size, bool isLinear) {
 
 
 
-float NN::accuracy(const Eigen::MatrixXf& output, const Eigen::MatrixXf& target) {
+float NN::accuracy(const Eigen::MatrixXf& output, const Eigen::MatrixXf& target) const {
 	int hit = 0;
 	for(int i=0; i<output.cols(); ++i) {
 		Eigen::MatrixXf::Index rowindex;
@@ -132,14 +133,14 @@ Eigen::VectorXi NN::classify(const Eigen::MatrixXf& input) {
 }
 
 
-void NN::save(std::ofstream& out) {
+void NN::save(std::ostream& out) const {
 	out.write((char*) (&inputSize), sizeof(int));
-	for(unsigned int i = 0; i < layers.size(); ++i) {
+	for(size_t i = 0; i < layers.size(); ++i) {
 		layers[i]->save(out);
 	}
 }
 
-NN NN::load(std::ifstream& in) {
+NN NN::load(std::istream& in) {
 	int inputSize;
 	in.read((char*) (&inputSize), sizeof(int));
 	NN nn(inputSize);
