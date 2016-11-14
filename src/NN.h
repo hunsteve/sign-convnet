@@ -16,11 +16,16 @@ class NN {
 private:
 	std::vector<Layer*> layers;
 	int inputSize;
+
+	float accuracy(const Eigen::MatrixXf& output, const Eigen::MatrixXf& target);
+
 public:
 	NN(int inputSize);
 	virtual ~NN();
 
 	Eigen::MatrixXf forward(const Eigen::MatrixXf& input);
+	Eigen::VectorXi classify(const Eigen::MatrixXf& input);
+
 	void calcDeltas(const Eigen::MatrixXf& error);
 	void applyWeightMod(float mu);
 

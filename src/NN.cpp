@@ -43,35 +43,31 @@ void NN::applyWeightMod(float mu) {
 }
 
 void NN::train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY, int maxEpoch, float mu, float ratio, int minibatchSize, bool isDebug) {
-	int trainBatchCount = (int) floor((trainX.rows() / minibatchSize) * ratio);
+	int trainBatchCount = (int) floor((trainX.cols() / minibatchSize) * ratio);
 
 	for(int epoch = 0; epoch < maxEpoch; ++epoch) {
-		float trainErrorSum = 0;
 		for(int batch=0; batch<trainBatchCount; ++batch) {
-			Eigen::MatrixXf inp = trainX.block(batch * minibatchSize,0,minibatchSize,trainX.cols());
-			Eigen::MatrixXf targ = trainY.block(batch * minibatchSize,0,minibatchSize,trainY.cols());
+			Eigen::MatrixXf inp = trainX.block(0,batch * minibatchSize,trainX.rows(),minibatchSize);
+			Eigen::MatrixXf targ = trainY.block(0,batch * minibatchSize,trainY.rows(),minibatchSize);
 			Eigen::MatrixXf out = forward(inp);
 			Eigen::MatrixXf err = targ - out;
-			std::cout << "epoch: " << epoch << "/" << maxEpoch << " batch: " << batch << "/" << trainBatchCount << std::endl;
 			calcDeltas(err);
-			applyWeightMod(2*mu);
-			//sumerrtr += err.meanSquared();
-		}
-		float validationErrorSum = 0;
+			applyWeightMod(2*mu / minibatchSize);
 
-		int validationSize = trainX.rows() - trainBatchCount * minibatchSize;
-		Eigen::MatrixXf inp = trainX.block(trainBatchCount * minibatchSize,0,validationSize,trainX.cols());
-		Eigen::MatrixXf targ = trainY.block(trainBatchCount * minibatchSize,0,validationSize,trainY.cols());
+			float trainErrorSum = err.squaredNorm() / (err.rows()*err.cols());
+			std::cout << "epoch: " << epoch << "/" << maxEpoch << " batch: " << batch << "/" << trainBatchCount << " errorTrain: " << trainErrorSum << " accuracy: " << accuracy(out, targ) << std::endl;
+		}
+
+
+		int validationSize = trainX.cols() - trainBatchCount * minibatchSize;
+		std::cout << validationSize << std::endl;
+		Eigen::MatrixXf inp = trainX.block(0,trainBatchCount * minibatchSize,trainX.rows(),validationSize);
+		Eigen::MatrixXf targ = trainY.block(0,trainBatchCount * minibatchSize,trainY.rows(),validationSize);
 		Eigen::MatrixXf out = forward(inp);
 		Eigen::MatrixXf err = targ - out;
-		//sumerrvalid += err.meanSquared();
+		float MSE = err.squaredNorm() / (err.rows()*err.cols());
 
-		if (isDebug) {
-			std::cout << "train error:" << (trainErrorSum / trainBatchCount);
-		}
-
-		float MSE = validationErrorSum / validationSize;
-		std::cout << "MSE:" << MSE << std::endl;
+		std::cout << "MSE:" << MSE << " accuracy: " << accuracy(out, targ) << std::endl;
 	}
 }
 
@@ -107,6 +103,34 @@ void NN::addFCLayer(int size, bool isLinear) {
 	Layer* layer = new FullyConnectedLayer(lastSize, size, isLinear);
 	layers.push_back(layer);
 }
+
+
+
+float NN::accuracy(const Eigen::MatrixXf& output, const Eigen::MatrixXf& target) {
+	int hit = 0;
+	for(int i=0; i<output.cols(); ++i) {
+		Eigen::MatrixXf::Index rowindex;
+		output.col(i).maxCoeff(&rowindex);
+		if (target(rowindex,i) == 1)
+			hit++;
+	}
+
+	return (float)hit / output.cols();
+}
+
+Eigen::VectorXi NN::classify(const Eigen::MatrixXf& input) {
+	Eigen::MatrixXf out = forward(input);
+
+	Eigen::VectorXi idx(input.cols());
+	for(int i=0; i<input.cols(); ++i) {
+		Eigen::MatrixXf::Index rowindex;
+		out.col(i).maxCoeff(&rowindex);
+		idx(i) = rowindex;
+	}
+
+	return idx;
+}
+
 
 void NN::save(std::ofstream& out) {
 	out.write((char*) (&inputSize), sizeof(int));

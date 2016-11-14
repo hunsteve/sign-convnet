@@ -23,8 +23,6 @@ using namespace std;
 
 vector<string> files;
 
-#define HEX( x ) setw(2) << setfill('0') << hex << (int)( x )
-
 int collect_files(const char *filepath, const struct stat *info,
                   const int typeflag, struct FTW *pathinfo)
 {
@@ -49,12 +47,12 @@ int filenameToClassIndex(string fn) {
     return sampleClass;
 }
 
-void BMPFilesToSamples(vector<string> files, int cols, int classes, MatrixXf* samplesX, MatrixXf* samplesY) {
+void BMPFilesToSamples(vector<string> files, int features, int classes, MatrixXf* samplesX, MatrixXf* samplesY) {
 	random_shuffle(files.begin(), files.end());
 
 
-	*samplesX = MatrixXf(files.size(), cols);
-	*samplesY = MatrixXf(files.size(), classes);
+	*samplesX = MatrixXf(features, files.size());
+	*samplesY = MatrixXf(classes, files.size());
 
 	int i=0;
 	for (vector<string>::iterator it=files.begin(); it!=files.end(); ++it) {
@@ -62,13 +60,13 @@ void BMPFilesToSamples(vector<string> files, int cols, int classes, MatrixXf* sa
 	    vector<unsigned char> data = readBMP(it->c_str());
 	    typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Matrix8u;
 
-	    MatrixXf datarow = Map<Matrix8u>(data.data(), 1, data.size()).cast<MatrixXf::Scalar>();
+	    MatrixXf datacol = Map<Matrix8u>(data.data(), data.size(), 1).cast<MatrixXf::Scalar>();
 
-	    datarow = (datarow - MatrixXf::Ones(1,data.size()) * 128) / 128.0f; //normalize to near N(0,1)
+	    datacol = (datacol - MatrixXf::Ones(data.size(), 1) * 128) / 128.0f; //normalize to near N(0,1)
 
-	    samplesX->block(i,0,1,cols) = datarow;
-	    samplesY->block(i,0,1,classes) = MatrixXf::Zero(1,classes);
-	    (*samplesY)(i,filenameToClassIndex(*it)) = 1;
+	    samplesX->block(0,i,features,1) = datacol;
+	    samplesY->block(0,i,classes,1) = MatrixXf::Zero(classes,1);
+	    (*samplesY)(filenameToClassIndex(*it),i) = 1;
 	    i++;
 	    if (i%1000 == 0)
 	    	cout << "Read " << i << " files." << endl;
@@ -115,25 +113,30 @@ int main() {
 	//cout << (samplesX) << endl << endl;
 	//cout << (samplesY) << endl << endl;
 
- 	/*Eigen::MatrixXf m(2,9);
+ 	/*Eigen::MatrixXf m(9,2);
  	m << 1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19;
 
  	ConvolutionalLayer cl(3,3,1,1,0,2,2);
  	cout << cl.forward(m) << endl;*/
 
-	NN nn(samplesX.cols());
-	nn.addConvLayer(52,52,3,1,2,3,64);
+
+
+
+
+ 	NN nn(samplesX.rows());
+	/*nn.addConvLayer(52,52,3,1,2,3,8);
 	/*nn.addConvLayer(2,1,3,64);
-	nn.addConvLayer(2,1,3,128);*/
+	nn.addConvLayer(2,1,3,128);
+	nn.addFCLayer(1000);*/
 	nn.addFCLayer(1000);
-	nn.addFCLayer(1000);
-	nn.addFCLayer(samplesY.cols(),true);
+	nn.addFCLayer(samplesY.rows(),true);
+
 
 	cout << "NN construction completed." << endl;
 
 	/*cout << nn.forward(samplesX.block(0,0,3,samplesX.cols())) << endl;*/
 
-	nn.train(samplesX, samplesY, 10, 0.00f, 0.8f, 400, false);
+	nn.train(samplesX, samplesY, 10, 0.001f, 0.95f, 250, false);
 
 	ofstream f;
 	f.open("nn.dat", std::ofstream::out | std::ofstream::binary);

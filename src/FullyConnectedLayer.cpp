@@ -10,7 +10,7 @@
 FullyConnectedLayer::FullyConnectedLayer(int previousSize, int size, bool isLinear)
 {
 	this->isLinear = isLinear;
-	w = Eigen::MatrixXf::Random(previousSize, size) * 0.1f;
+	w = Eigen::MatrixXf::Random(size, previousSize) * 0.1f;
 	b = Eigen::VectorXf::Zero(size);
 }
 
@@ -19,7 +19,7 @@ FullyConnectedLayer::~FullyConnectedLayer() {
 
 Eigen::MatrixXf FullyConnectedLayer::forward(const Eigen::MatrixXf& input){
 	inp = input;
-	s = input * w + Eigen::VectorXf::Ones(input.rows()) * b.transpose();
+	s = w * input + b * Eigen::VectorXf::Ones(input.cols()).transpose();
 	if (isLinear)
 		return s;
 	else
@@ -33,10 +33,10 @@ Eigen::MatrixXf FullyConnectedLayer::backprop(const Eigen::MatrixXf& error){
 	else
 		sDiff = (s.array() > 0).select(error,0); //ReLU derivative
 
-	deltaW = inp.transpose() * sDiff;
-	deltaB = Eigen::VectorXf::Ones(sDiff.rows()).transpose() * sDiff;
+	deltaW = sDiff * inp.transpose();
+	deltaB = sDiff * Eigen::VectorXf::Ones(sDiff.cols());
 
-	return sDiff * w.transpose();
+	return w.transpose() * sDiff;
 }
 
 void FullyConnectedLayer::applyWeightMod(float mu){
@@ -46,7 +46,7 @@ void FullyConnectedLayer::applyWeightMod(float mu){
 }
 
 int FullyConnectedLayer::getOutputSize() {
-	return w.cols();
+	return w.rows();
 }
 
 
