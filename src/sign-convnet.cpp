@@ -11,6 +11,7 @@
 #include "Eigen/Dense"
 
 #include "FullyConnectedLayer.h"
+#include "ConvolutionalLayer.h"
 #include "NN.h"
 #include "bitmap.h"
 #include <ftw.h>
@@ -82,6 +83,19 @@ void BMPFilesToSamples(vector<string> files, int cols, int classes, MatrixXf* sa
 }
 
 int main() {
+	/*Eigen::MatrixXf m(6,3);
+	m << 1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19;
+
+	cout << m << endl;
+
+	m.transposeInPlace();
+	MatrixXf v(Map<MatrixXf>(m.data(), m.cols()*m.rows() / 2, 2));
+	v.transposeInPlace();
+
+	cout << v << endl;
+	 */
+
+
 	//const char* path = "/home/steve/Desktop/train-52x52/";
 	const char* path = "/home/steve/Desktop/train-52x52-small/";
 	nftw(path, collect_files, 15, FTW_PHYS);
@@ -94,11 +108,19 @@ int main() {
 	//cout << (samplesX) << endl << endl;
 	//cout << (samplesY) << endl << endl;
 
+ 	Eigen::MatrixXf m(2,9);
+ 	m << 1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19;
+
+ 	ConvolutionalLayer cl(3,3,1,1,0,2,2);
+ 	cout << cl.forward(m) << endl;
+
 	NN nn(samplesX.cols());
 	nn.addFCLayer(20);
 	nn.addFCLayer(samplesY.cols(),true);
 
-	cout << nn.forward(samplesX.block(0,0,1,samplesX.cols())) << endl;
+	cout << nn.forward(samplesX.block(0,0,3,samplesX.cols())) << endl;
+
+	nn.train(samplesX, samplesY, 10, 0.01f, 0.8f, 128, false);
 
 	return 0;
 }
