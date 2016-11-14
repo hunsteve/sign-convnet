@@ -10,23 +10,22 @@
 #include <stdio.h>
 #include <vector>
 
-std::vector<unsigned char> readBMP(const char* filename)
-{
-	FILE* f = fopen(filename, "rb");
-	unsigned char header[0x8a];
-	fread(header, sizeof(unsigned char), 0x8a, f); //0x8a byte header
+std::vector<unsigned char> readBMP(const char* filename) {
+    FILE* f = fopen(filename, "rb");
+    unsigned char header[0x8a];
+    fread(header, sizeof(unsigned char), 0x8a, f);  // 0x8a byte header
 
-	int w = *(int*)&header[18];
-	int h = *(int*)&header[22];
-	int size = 3 * w * h;
+    int w = *(int*)&header[18];
+    int h = *(int*)&header[22];
+    int size = 3 * w * h;
 
-	std::vector<unsigned char> rgb;
-	rgb.resize(3*w*h);
-	fread(rgb.data(), sizeof(unsigned char), size, f); // read the rest of the data at once
-	fclose(f);
+    std::vector<unsigned char> rgb;
+    rgb.resize(3 * w * h);
+    fread(rgb.data(), sizeof(unsigned char), size,
+          f);  // read the rest of the data at once
+    fclose(f);
 
-	return rgb;
+    return rgb;
 }
-
 
 #endif /* BITMAP_H_ */
