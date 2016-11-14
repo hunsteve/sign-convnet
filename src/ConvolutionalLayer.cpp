@@ -7,6 +7,8 @@
 
 #include "ConvolutionalLayer.h"
 #include <vector>
+#include <chrono>
+#include <iostream>
 
 ConvolutionalLayer::ConvolutionalLayer(int w, int h, int d, int stride, int padding, int K, int N)
 : width(w), height(h), dimension(d), stride(stride), padding(padding), K(K), N(N){
@@ -19,8 +21,8 @@ ConvolutionalLayer::ConvolutionalLayer(int w, int h, int d, int stride, int padd
 //Calculate a sparse matrix that does the im2col transformation
 SpMat ConvolutionalLayer::buildIM2COL() {
 
-	int outWidth = (width + padding - K) / stride + 1;
-	int outHeight = (height + padding - K) / stride + 1;
+	int outWidth = getOutputWidth();
+	int outHeight = getOutputHeight();
 
 	SpMat x(width * height * dimension, outWidth * outHeight * K * K * dimension);
 	std::vector<Triplet> tripletList;
@@ -55,21 +57,41 @@ ConvolutionalLayer::~ConvolutionalLayer() {
 }
 
 Eigen::MatrixXf ConvolutionalLayer::forward(const Eigen::MatrixXf& input) {
+
+
+
 	//inputs rows are the input images of the minibatch
 	//convert them to im2col with a matrix multiply
+
+/*auto t0 = std::chrono::system_clock::now();*/
+
 	Eigen::MatrixXf im2col = input * X;
+
+/*auto t1 = std::chrono::system_clock::now();
+std::chrono::duration<double> elapsed_seconds = t1-t0;
+std::cout << "Sparse mult" << elapsed_seconds.count() << std::endl;*/
 
 	//reshape the im2col to W2*H2 by K*K*D matrix to prepare it for the convolution
 	//note: Eigen stores matrices in column-order, thats why we need the transposes
 	//TODO: possible performance degradation due to transposes
+
 	im2col.transposeInPlace();
 	inp = Eigen::MatrixXf(Eigen::Map<Eigen::MatrixXf>(im2col.data(), K*K*dimension, im2col.cols() * im2col.rows() / (K*K*dimension)));
 	inp.transposeInPlace();
+
+/*auto t2 = std::chrono::system_clock::now();
+elapsed_seconds = t2-t1;
+std::cout << "transpose" << elapsed_seconds.count() << std::endl;*/
 
 	//perform the convolution with the im2col, which is this way a matrix multiply
 	//then add the bias.
 	//the im2col is W2*H2 by K*K*D and our convolution filter bank is K*K*D by N.
 	Eigen::MatrixXf outputImages = inp * w + Eigen::VectorXf::Ones(inp.rows()) * b.transpose();
+
+/*auto t3 = std::chrono::system_clock::now();
+elapsed_seconds = t3-t2;
+std::cout << "mult and add" << elapsed_seconds.count() << std::endl;*/
+
 
 	//reshape our output images to the usual one-row-per-image format, just like the input
 	outputImages.transposeInPlace();
@@ -111,7 +133,26 @@ void ConvolutionalLayer::applyWeightMod(float mu) {
 }
 
 int ConvolutionalLayer::getOutputSize() {
-	int outWidth = (width + padding - K) / stride + 1;
-	int outHeight = (height + padding - K) / stride + 1;
-	return outWidth * outHeight * N;
+	return getOutputWidth() * getOutputHeight() * getOutputDimension();
+}
+
+int ConvolutionalLayer::getOutputWidth() {
+	return (width + padding - K) / stride + 1;
+}
+int ConvolutionalLayer::getOutputHeight() {
+	return (height + padding - K) / stride + 1;
+}
+
+int ConvolutionalLayer::getOutputDimension() {
+	return N;
+}
+
+void ConvolutionalLayer::save(std::ofstream& out) {
+	out << 'C';
+}
+
+
+ConvolutionalLayer* ConvolutionalLayer::load(std::ifstream& in) {
+	ConvolutionalLayer* c = new ConvolutionalLayer(1, 1, 1, 1, 1, 1, 1);
+	return c;
 }

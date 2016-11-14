@@ -9,6 +9,7 @@
 #define NN_H_
 #include <vector>
 #include <string>
+#include <fstream>
 #include "Layer.h"
 
 class NN {
@@ -25,8 +26,12 @@ public:
 
 	void train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY, int maxEpoch, float mu, float ratio, int minibatchSize, bool isDebug);
 
-	void addConvLayer();
+	void addConvLayer(int w, int h, int d, int stride, int padding, int K, int N);
+	void addConvLayer(int stride, int padding, int K, int N);
 	void addFCLayer(int size, bool isLinear=false);
+
+	void save(std::ofstream& out);
+	static NN load(std::ifstream& in);
 };
 
 #endif /* NN_H_ */

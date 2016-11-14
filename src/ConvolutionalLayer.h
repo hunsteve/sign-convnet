@@ -9,7 +9,7 @@
 #define CONVOLUTIONALLAYER_H_
 #include "Layer.h"
 #include "Eigen/Sparse"
-
+#include <fstream>
 
 typedef Eigen::SparseMatrix<float> SpMat;
 typedef Eigen::Triplet<float> Triplet;
@@ -42,6 +42,12 @@ public:
 	Eigen::MatrixXf backprop(const Eigen::MatrixXf& error);
 	void applyWeightMod(float mu);
 	int getOutputSize();
+	int getOutputWidth();
+	int getOutputHeight();
+	int getOutputDimension();
+
+	void save(std::ofstream& out);
+	static ConvolutionalLayer* load(std::ifstream& in);
 };
 
 #endif /* CONVOLUTIONALLAYER_H_ */

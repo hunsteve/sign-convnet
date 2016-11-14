@@ -9,6 +9,7 @@
 #define FULLYCONNECTEDLAYER_H_
 
 #include "Layer.h"
+#include <fstream>
 
 class FullyConnectedLayer : public Layer {
 private:
@@ -28,6 +29,9 @@ public:
 	Eigen::MatrixXf backprop(const Eigen::MatrixXf& error);
 	void applyWeightMod(float mu);
 	int getOutputSize();
+
+	void save(std::ofstream& out);
+	static FullyConnectedLayer* load(std::ifstream& in);
 };
 
 #endif /* FULLYCONNECTEDLAYER_H_ */

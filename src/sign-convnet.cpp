@@ -7,6 +7,7 @@
 //============================================================================
 
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include "Eigen/Dense"
 
@@ -83,6 +84,12 @@ void BMPFilesToSamples(vector<string> files, int cols, int classes, MatrixXf* sa
 }
 
 int main() {
+	Eigen::initParallel();
+
+	cout << "Threads used: " << Eigen::nbThreads() << endl;
+	if (Eigen::nbThreads() == 1)
+		cout << "Warning! using only one thread! make sure to use -fopenmp with G++" << endl;
+
 	/*Eigen::MatrixXf m(6,3);
 	m << 1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19;
 
@@ -96,8 +103,8 @@ int main() {
 	 */
 
 
-	//const char* path = "/home/steve/Desktop/train-52x52/";
-	const char* path = "/home/steve/Desktop/train-52x52-small/";
+	const char* path = "/home/steve/Desktop/train-52x52/";
+	//const char* path = "/home/steve/Desktop/train-52x52-small/";
 	nftw(path, collect_files, 15, FTW_PHYS);
  	cout << "BMP files found: " << files.size() << endl;
 
@@ -108,19 +115,30 @@ int main() {
 	//cout << (samplesX) << endl << endl;
 	//cout << (samplesY) << endl << endl;
 
- 	Eigen::MatrixXf m(2,9);
+ 	/*Eigen::MatrixXf m(2,9);
  	m << 1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19;
 
  	ConvolutionalLayer cl(3,3,1,1,0,2,2);
- 	cout << cl.forward(m) << endl;
+ 	cout << cl.forward(m) << endl;*/
 
 	NN nn(samplesX.cols());
-	nn.addFCLayer(20);
+	nn.addConvLayer(52,52,3,1,2,3,64);
+	/*nn.addConvLayer(2,1,3,64);
+	nn.addConvLayer(2,1,3,128);*/
+	nn.addFCLayer(1000);
+	nn.addFCLayer(1000);
 	nn.addFCLayer(samplesY.cols(),true);
 
-	cout << nn.forward(samplesX.block(0,0,3,samplesX.cols())) << endl;
+	cout << "NN construction completed." << endl;
 
-	nn.train(samplesX, samplesY, 10, 0.01f, 0.8f, 128, false);
+	/*cout << nn.forward(samplesX.block(0,0,3,samplesX.cols())) << endl;*/
+
+	nn.train(samplesX, samplesY, 10, 0.00f, 0.8f, 400, false);
+
+	ofstream f;
+	f.open("nn.dat", std::ofstream::out | std::ofstream::binary);
+	nn.save(f);
+	f.close();
 
 	return 0;
 }

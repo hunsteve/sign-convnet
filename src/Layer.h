@@ -8,6 +8,7 @@
 #ifndef LAYER_H_
 #define LAYER_H_
 #include "Eigen/Dense"
+#include <fstream>
 
 class Layer {
 public:
@@ -15,6 +16,8 @@ public:
 	virtual Eigen::MatrixXf backprop(const Eigen::MatrixXf& error) = 0;
 	virtual void applyWeightMod(float mu) = 0;
 	virtual int getOutputSize() = 0;
+
+	virtual void save(std::ofstream& out) = 0;
 };
 
 #endif /* LAYER_H_ */
