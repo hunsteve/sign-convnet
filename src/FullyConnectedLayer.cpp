@@ -44,11 +44,31 @@ void FullyConnectedLayer::applyWeightMod(float mu) {
     b += deltaB * mu;
 }
 
-int FullyConnectedLayer::getOutputSize() const { return w.rows(); }
+int FullyConnectedLayer::getOutputSize() const {
+	return w.rows();
+}
 
-void FullyConnectedLayer::save(std::ostream& out) const { out << 'F'; }
+void FullyConnectedLayer::save(std::ostream& out) const {
+	out << 'F';
+	int size = w.rows();
+	int previousSize = w.cols();
+	out.write(reinterpret_cast<const char*>(&isLinear), sizeof(bool));
+	out.write(reinterpret_cast<const char*>(&size), sizeof(int));
+	out.write(reinterpret_cast<const char*>(&previousSize), sizeof(int));
+	out.write(reinterpret_cast<const char*>(w.data()), size*previousSize*sizeof(float));
+	out.write(reinterpret_cast<const char*>(b.data()), size*sizeof(float));
+}
 
 FullyConnectedLayer* FullyConnectedLayer::load(std::istream& in) {
-    FullyConnectedLayer* f = new FullyConnectedLayer(1, 1, false);
+	int size;
+	int previousSize;
+	bool isLinear;
+	in.read(reinterpret_cast<char*>(&isLinear), sizeof(bool));
+	in.read(reinterpret_cast<char*>(&size), sizeof(int));
+	in.read(reinterpret_cast<char*>(&previousSize), sizeof(int));
+    FullyConnectedLayer* f = new FullyConnectedLayer(previousSize, size, isLinear);
+    in.read(reinterpret_cast<char*>(f->w.data()), size*previousSize*sizeof(float));
+	in.read(reinterpret_cast<char*>(f->b.data()), size*sizeof(float));
+
     return f;
 }

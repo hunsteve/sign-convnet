@@ -162,9 +162,37 @@ int ConvolutionalLayer::getOutputHeight() const {
 
 int ConvolutionalLayer::getOutputDimension() const { return N; }
 
-void ConvolutionalLayer::save(std::ostream& out) const { out << 'C'; }
+void ConvolutionalLayer::save(std::ostream& out) const {
+	out << 'C';
+	out.write(reinterpret_cast<const char*>(&width), sizeof(int));
+	out.write(reinterpret_cast<const char*>(&height), sizeof(int));
+	out.write(reinterpret_cast<const char*>(&dimension), sizeof(int));
+	out.write(reinterpret_cast<const char*>(&stride), sizeof(int));
+	out.write(reinterpret_cast<const char*>(&padding), sizeof(int));
+	out.write(reinterpret_cast<const char*>(&K), sizeof(int));
+	out.write(reinterpret_cast<const char*>(&N), sizeof(int));
+	out.write(reinterpret_cast<const char*>(w.data()), w.rows()*w.cols()*sizeof(float));
+	out.write(reinterpret_cast<const char*>(b.data()), b.rows()*b.cols()*sizeof(float));
+}
 
 ConvolutionalLayer* ConvolutionalLayer::load(std::istream& in) {
-    ConvolutionalLayer* c = new ConvolutionalLayer(1, 1, 1, 1, 1, 1, 1);
+	int width;
+	int height;
+	int dimension;
+	int stride;
+	int padding;
+	int K;
+	int N;
+	in.read(reinterpret_cast<char*>(&width), sizeof(int));
+	in.read(reinterpret_cast<char*>(&height), sizeof(int));
+	in.read(reinterpret_cast<char*>(&dimension), sizeof(int));
+	in.read(reinterpret_cast<char*>(&stride), sizeof(int));
+	in.read(reinterpret_cast<char*>(&padding), sizeof(int));
+	in.read(reinterpret_cast<char*>(&K), sizeof(int));
+	in.read(reinterpret_cast<char*>(&N), sizeof(int));
+
+	ConvolutionalLayer* c = new ConvolutionalLayer(width, height, dimension, stride, padding, K, N);
+	in.read(reinterpret_cast<char*>(c->w.data()), c->w.rows()*c->w.cols()*sizeof(float));
+	in.read(reinterpret_cast<char*>(c->b.data()), c->b.rows()*c->b.cols()*sizeof(float));
     return c;
 }

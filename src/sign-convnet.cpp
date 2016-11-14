@@ -1,5 +1,5 @@
 /*
- * NN.cpp
+ * sign-convnet.cpp
  *
  *  Created on: Nov 11, 2016
  *      Author: steve
@@ -68,7 +68,35 @@ void BMPFilesToSamples(std::vector<std::string> files, int features, int classes
     }
 }
 
-int main() {
+int main(int argc, char** argv) {
+
+	//if a command line argument is provided, it is considered as an input file
+	//it is then classified, using nn.dat, classes: 0..11
+	if (argc > 1) {
+		char* fn = argv[1];
+		std::vector<unsigned char> data = readBMP(fn);
+		std::cout << fn << std::endl;
+		typedef Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic,
+									  Eigen::RowMajor>
+			Matrix8u;
+		Eigen::MatrixXf samplesX(data.size(), 1);
+		Eigen::MatrixXf datacol =
+					Eigen::Map<Matrix8u>(data.data(), data.size(), 1).cast<Eigen::MatrixXf::Scalar>();
+
+		datacol = (datacol - Eigen::MatrixXf::Ones(data.size(), 1) * 128) /
+					128.0f;  // normalize to near N(0,1)
+
+		samplesX.block(0, 0, data.size(), 1) = datacol;
+
+		std::ifstream f2;
+		f2.open("nn.dat", std::ifstream::in | std::ofstream::binary);
+		std::unique_ptr<NN> nn = NN::load(f2);
+		f2.close();
+
+		std::cout << nn->classify(samplesX) << std::endl;
+		return 0;
+	}
+
     Eigen::initParallel();
 
     std::cout << "Threads used: " << Eigen::nbThreads() << std::endl;
@@ -76,18 +104,6 @@ int main() {
     	std::cout << "Warning! using only one thread! make sure to use -fopenmp "
                 "with G++"
              << std::endl;
-
-    /*Eigen::MatrixXf m(6,3);
-    m << 1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19;
-
-    cout << m << endl;
-
-    m.transposeInPlace();
-    MatrixXf v(Map<MatrixXf>(m.data(), m.cols()*m.rows() / 2, 2));
-    v.transposeInPlace();
-
-    cout << v << endl;
-     */
 
     const char* path = "/home/steve/Desktop/train-52x52/";
     // const char* path = "/home/steve/Desktop/train-52x52-small/";
@@ -97,15 +113,6 @@ int main() {
     Eigen::MatrixXf samplesX;
     Eigen::MatrixXf samplesY;
     BMPFilesToSamples(files, 52 * 52 * 3, 12, &samplesX, &samplesY);
-
-    // cout << (samplesX) << endl << endl;
-    // cout << (samplesY) << endl << endl;
-
-    /*Eigen::MatrixXf m(9,2);
-    m << 1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19;
-
-    ConvolutionalLayer cl(3,3,1,1,0,2,2);
-    cout << cl.forward(m) << endl;*/
 
     NN nn(samplesX.rows());
     nn.addConvLayer(52,52,3,1,2,3,32);
@@ -117,14 +124,13 @@ int main() {
 
     std::cout << "NN construction completed." << std::endl;
 
-    /*cout << nn.forward(samplesX.block(0,0,3,samplesX.cols())) << endl;*/
-
     nn.train(samplesX, samplesY, 10, 0.001f, 0.95f, 250, false);
 
     std::ofstream f;
     f.open("nn.dat", std::ofstream::out | std::ofstream::binary);
     nn.save(f);
     f.close();
+
 
     return 0;
 }
