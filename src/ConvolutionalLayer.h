@@ -12,11 +12,10 @@
 #include "Eigen/Sparse"
 #include "Layer.h"
 
-typedef Eigen::SparseMatrix<float> SpMat;
-typedef Eigen::Triplet<float> Triplet;
-
 class ConvolutionalLayer : public Layer {
    private:
+	typedef Eigen::SparseMatrix<float> SpMat;
+	typedef Eigen::Triplet<float> Triplet;
     const int width;
     const int height;
     const int dimension;

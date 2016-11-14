@@ -11,16 +11,19 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <memory>
 #include "Layer.h"
 
 class NN {
    private:
-    std::vector<Layer*> layers;
+    std::vector<std::unique_ptr<Layer>> layers;
     const int inputSize;
 
     float accuracy(const Eigen::MatrixXf& output,
                    const Eigen::MatrixXf& target) const;
 
+    NN & operator=(const NN&) = delete;
+    NN(const NN&) = delete;
    public:
     NN(int inputSize);
     virtual ~NN();
@@ -41,7 +44,7 @@ class NN {
     void addFCLayer(int size, bool isLinear = false);
 
     void save(std::ostream& out) const;
-    static NN load(std::istream& in);
+    static std::unique_ptr<NN> load(std::istream& in);
 };
 
 #endif /* NN_H_ */

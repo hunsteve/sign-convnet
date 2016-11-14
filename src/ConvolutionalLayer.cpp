@@ -20,15 +20,14 @@ ConvolutionalLayer::ConvolutionalLayer(int w, int h, int d, int stride,
       stride(stride),
       padding(padding),
       K(K),
-      N(N) {
-    this->w = Eigen::MatrixXf::Random(N, K * K * dimension) * 0.1f;
-    // this->w = Eigen::MatrixXf::Ones(N, K*K*dimension);
-    this->b = Eigen::VectorXf::Zero(N);
-    this->X = buildIM2COL();
+      N(N),
+	  w(Eigen::MatrixXf::Random(N, K * K * dimension) * 0.1f),
+	  b(Eigen::VectorXf::Zero(N)),
+	  X(buildIM2COL()) {
 }
 
 // Calculate a sparse matrix that does the im2col transformation
-SpMat ConvolutionalLayer::buildIM2COL() const {
+ConvolutionalLayer::SpMat ConvolutionalLayer::buildIM2COL() const {
     int outWidth = getOutputWidth();
     int outHeight = getOutputHeight();
 

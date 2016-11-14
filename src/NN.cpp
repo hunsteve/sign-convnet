@@ -15,9 +15,6 @@
 NN::NN(int inputSize) : inputSize(inputSize) {}
 
 NN::~NN() {
-    for (size_t i = 0; i < layers.size(); ++i) {
-        delete layers[i];
-    }
 }
 
 Eigen::MatrixXf NN::forward(const Eigen::MatrixXf& input) {
@@ -45,8 +42,9 @@ void NN::applyWeightMod(float mu) {
 void NN::train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY,
                int maxEpoch, float mu, float ratio, int minibatchSize,
                bool isDebug) {
-    int trainBatchCount = (int)floor((trainX.cols() / minibatchSize) * ratio);
-
+    int trainBatchCount = static_cast<int>(floor((trainX.cols() / minibatchSize) * ratio));
+    int validationCount = static_cast<int>(floor(trainX.cols() / minibatchSize)) - trainBatchCount;
+    int validationOffset = trainBatchCount * minibatchSize;
     for (int epoch = 0; epoch < maxEpoch; ++epoch) {
         for (int batch = 0; batch < trainBatchCount; ++batch) {
             Eigen::MatrixXf inp = trainX.block(0, batch * minibatchSize,
@@ -65,18 +63,25 @@ void NN::train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY,
                       << " accuracy: " << accuracy(out, targ) << std::endl;
         }
 
-        int validationSize = trainX.cols() - trainBatchCount * minibatchSize;
-        std::cout << validationSize << std::endl;
-        Eigen::MatrixXf inp = trainX.block(0, trainBatchCount * minibatchSize,
-                                           trainX.rows(), validationSize);
-        Eigen::MatrixXf targ = trainY.block(0, trainBatchCount * minibatchSize,
-                                            trainY.rows(), validationSize);
-        Eigen::MatrixXf out = forward(inp);
-        Eigen::MatrixXf err = targ - out;
-        float MSE = err.squaredNorm() / (err.rows() * err.cols());
 
-        std::cout << "MSE:" << MSE << " accuracy: " << accuracy(out, targ)
-                  << std::endl;
+
+        float sumaccu = 0;
+        for (int batch = 0; batch < validationCount; ++batch) {
+			Eigen::MatrixXf inp = trainX.block(0, validationOffset + batch * minibatchSize,
+											   trainX.rows(), minibatchSize);
+			Eigen::MatrixXf targ = trainY.block(0, validationOffset  + batch * minibatchSize,
+												trainY.rows(), minibatchSize);
+			Eigen::MatrixXf out = forward(inp);
+			Eigen::MatrixXf err = targ - out;
+			float accu = accuracy(out, targ);
+			sumaccu += accu;
+			std::cout << "validation accuracy " << batch << "/" << validationCount << " : " << accu << std::endl;
+        }
+        sumaccu /= validationCount;
+
+        //float MSE = err.squaredNorm() / (err.rows() * err.cols());
+
+        std::cout << "TOTAL validation accuracy: " << sumaccu << std::endl;
     }
 }
 
@@ -89,19 +94,19 @@ void NN::addConvLayer(int w, int h, int d, int stride, int padding, int K,
         lastSize = layers.back()->getOutputSize();
     Layer* layer = new ConvolutionalLayer(w, h, d, stride, padding, K, N);
     assert(w * h * d == lastSize);
-    layers.push_back(layer);
+    layers.push_back(std::unique_ptr<Layer>(layer));
 }
 
 void NN::addConvLayer(int stride, int padding, int K, int N) {
     assert(layers.size());
     ConvolutionalLayer* lastConvLayer =
-        dynamic_cast<ConvolutionalLayer*>(layers.back());
+        dynamic_cast<ConvolutionalLayer*>(layers.back().get());
     assert(lastConvLayer);
 
     Layer* layer = new ConvolutionalLayer(
         lastConvLayer->getOutputWidth(), lastConvLayer->getOutputHeight(),
         lastConvLayer->getOutputDimension(), stride, padding, K, N);
-    layers.push_back(layer);
+    layers.push_back(std::unique_ptr<Layer>(layer));
 }
 
 void NN::addFCLayer(int size, bool isLinear) {
@@ -111,7 +116,7 @@ void NN::addFCLayer(int size, bool isLinear) {
     else
         lastSize = layers.back()->getOutputSize();
     Layer* layer = new FullyConnectedLayer(lastSize, size, isLinear);
-    layers.push_back(layer);
+    layers.push_back(std::unique_ptr<Layer>(layer));
 }
 
 float NN::accuracy(const Eigen::MatrixXf& output,
@@ -123,7 +128,7 @@ float NN::accuracy(const Eigen::MatrixXf& output,
         if (target(rowindex, i) == 1) hit++;
     }
 
-    return (float)hit / output.cols();
+    return static_cast<float>(hit) / output.cols();
 }
 
 Eigen::VectorXi NN::classify(const Eigen::MatrixXf& input) {
@@ -140,26 +145,29 @@ Eigen::VectorXi NN::classify(const Eigen::MatrixXf& input) {
 }
 
 void NN::save(std::ostream& out) const {
-    out.write((char*)(&inputSize), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&inputSize), sizeof(int));
     for (size_t i = 0; i < layers.size(); ++i) {
         layers[i]->save(out);
     }
 }
 
-NN NN::load(std::istream& in) {
+std::unique_ptr<NN> NN::load(std::istream& in) {
     int inputSize;
-    in.read((char*)(&inputSize), sizeof(int));
-    NN nn(inputSize);
+    in.read(reinterpret_cast<char*>(&inputSize), sizeof(int));
+
+    std::unique_ptr<NN> nn(new NN(inputSize));
     while (true) {
         char c;
         in.read(&c, sizeof(char));
         if (in.eof()) break;
         Layer* nextLayer;
-        if (c == 'F')
+        if (c == 'F') {
             nextLayer = FullyConnectedLayer::load(in);
-        else if (c == 'C')
+        }
+        else if (c == 'C') {
             nextLayer = ConvolutionalLayer::load(in);
-        nn.layers.push_back(nextLayer);
+        }
+        nn->layers.push_back(std::unique_ptr<Layer>(nextLayer));
     }
 
     return nn;

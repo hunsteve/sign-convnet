@@ -8,10 +8,10 @@
 #include "FullyConnectedLayer.h"
 
 FullyConnectedLayer::FullyConnectedLayer(int previousSize, int size,
-                                         bool isLinear) {
-    this->isLinear = isLinear;
-    w = Eigen::MatrixXf::Random(size, previousSize) * 0.1f;
-    b = Eigen::VectorXf::Zero(size);
+                                         bool isLinear)
+	: isLinear(isLinear),
+	  w(Eigen::MatrixXf::Random(size, previousSize) * 0.1f),
+	  b(Eigen::VectorXf::Zero(size)) {
 }
 
 FullyConnectedLayer::~FullyConnectedLayer() {}

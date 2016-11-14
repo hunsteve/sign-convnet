@@ -13,6 +13,7 @@
 
 class Layer {
    public:
+	virtual ~Layer() {}
     virtual Eigen::MatrixXf forward(const Eigen::MatrixXf& input) = 0;
     virtual Eigen::MatrixXf backprop(const Eigen::MatrixXf& error) = 0;
     virtual void applyWeightMod(float mu) = 0;
