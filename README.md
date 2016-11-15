@@ -56,4 +56,26 @@ Training parameters:
 Training took 8 hours on all 4 cores of an Intel i5-3570K.
 Performance: 92.6% accuracy (measured on the validation set) 
 
+##nn_small.dat details:
+- input: 52x52 3 channel bitmap
+- convolution layer: 64 3x3 with zero padding -> 52x52x64
+- fully connected linear layer: 12 neuron -> outputs
+
+Training parameters: 
+ - max epoch count = 20
+ - learning rate = 0.001
+ - training samples: 57000
+ - validation samples: 3000
+ - minibatch size: 250
+ 
+Training took 1 hour on all 4 cores of an Intel i5-3570K.
+Performance: 54.1% accuracy (measured on the validation set) 
+
+code:
+
+    NN nn(samplesX.rows());
+ 	  nn.addConvLayer(52,52,3,1,2,3,64);
+ 	  nn.addFCLayer(samplesY.rows(), true);
+
+
 
