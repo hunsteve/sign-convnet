@@ -54,6 +54,7 @@ Training parameters:
  - minibatch size: 250
 
 Training took 8 hours on all 4 cores of an Intel i5-3570K.
+
 Performance: 92.6% accuracy (measured on the validation set) 
 
 ##nn_small.dat details:
@@ -69,7 +70,10 @@ Training parameters:
  - minibatch size: 250
  
 Training took 1 hour on all 4 cores of an Intel i5-3570K.
-Performance: 54.1% accuracy (measured on the validation set) 
+
+Performance: 54.1% accuracy (measured on the validation set).
+
+Comments on this network: This performance is not really usable. It might be better, if it was trained more.
 
 code:
 
