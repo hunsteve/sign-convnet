@@ -74,8 +74,8 @@ Performance: 54.1% accuracy (measured on the validation set)
 code:
 
     NN nn(samplesX.rows());
- 	  nn.addConvLayer(52,52,3,1,2,3,64);
- 	  nn.addFCLayer(samplesY.rows(), true);
+    nn.addConvLayer(52,52,3,1,2,3,64);
+    nn.addFCLayer(samplesY.rows(), true);
 
 
 
