@@ -30,6 +30,7 @@ where samplesX and samplesY are matrices storing the input and target output dat
  - build with or without Eclipse CDT 
  - make sure nn.dat is in the working directory of sign-convnet
  - run sign-convnet with a path to a 52x52 24-bit bitmap as command line argument
+
 e.g.:
 
     sign-convnet train-52x52/7/7_1234.bmp
