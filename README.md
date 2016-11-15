@@ -38,13 +38,13 @@ e.g.:
 This will output one number, the class of the image, between 0 and 11 (original class - 1)
 
 ##nn.dat details:
-input: 52x52 3 channel bitmap
-convolution layer: 32 3x3 with zero padding -> 52x52x32
-convolution layer: 64 3x3 with zero padding and stride = 2 -> 26x26x64
-convolution layer: 128 3x3 with zero padding and stride = 2 -> 13x13x128
-fully connected layer: 1000 neuron
-fully connected layer: 1000 neuron
-fully connected linear layer: 12 neuron -> outputs
+- input: 52x52 3 channel bitmap
+- convolution layer: 32 3x3 with zero padding -> 52x52x32
+- convolution layer: 64 3x3 with zero padding and stride = 2 -> 26x26x64
+- convolution layer: 128 3x3 with zero padding and stride = 2 -> 13x13x128
+- fully connected layer: 1000 neuron
+- fully connected layer: 1000 neuron
+- fully connected linear layer: 12 neuron -> outputs
 
 Training parameters: 
  - max epoch count = 75
