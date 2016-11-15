@@ -41,7 +41,7 @@ void NN::applyWeightMod(float mu) {
 
 void NN::train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY,
                int maxEpoch, float mu, float ratio, int minibatchSize,
-               bool isDebug) {
+               void(*epochEndCallback)(NN*, int)) {
     int trainBatchCount = static_cast<int>(floor((trainX.cols() / minibatchSize) * ratio));
     int validationCount = static_cast<int>(floor(trainX.cols() / minibatchSize)) - trainBatchCount;
     int validationOffset = trainBatchCount * minibatchSize;
@@ -63,8 +63,6 @@ void NN::train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY,
                       << " accuracy: " << accuracy(out, targ) << std::endl;
         }
 
-
-
         float sumaccu = 0;
         for (int batch = 0; batch < validationCount; ++batch) {
 			Eigen::MatrixXf inp = trainX.block(0, validationOffset + batch * minibatchSize,
@@ -82,6 +80,10 @@ void NN::train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY,
         //float MSE = err.squaredNorm() / (err.rows() * err.cols());
 
         std::cout << "TOTAL validation accuracy: " << sumaccu << std::endl;
+
+        if (epochEndCallback) {
+        	epochEndCallback(this, epoch);
+        }
     }
 }
 

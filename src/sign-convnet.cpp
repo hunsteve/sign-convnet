@@ -68,6 +68,15 @@ void BMPFilesToSamples(std::vector<std::string> files, int features, int classes
     }
 }
 
+void saveNNCallback(NN* nn, int epoch) {
+	std::stringstream ss;
+	ss << "nn" << epoch << ".dat";
+	std::ofstream f;
+	f.open(ss.str(), std::ofstream::out | std::ofstream::binary);
+	nn->save(f);
+	f.close();
+}
+
 int main(int argc, char** argv) {
 
 	//if a command line argument is provided, it is considered as an input file
@@ -114,23 +123,23 @@ int main(int argc, char** argv) {
     Eigen::MatrixXf samplesY;
     BMPFilesToSamples(files, 52 * 52 * 3, 12, &samplesX, &samplesY);
 
-    NN nn(samplesX.rows());
+    //neural net #1
+    /*NN nn(samplesX.rows());
     nn.addConvLayer(52,52,3,1,2,3,32);
     nn.addConvLayer(2,1,3,64);
     nn.addConvLayer(2,1,3,128);
     nn.addFCLayer(1000);
     nn.addFCLayer(1000);
-    nn.addFCLayer(samplesY.rows(), true);
+    nn.addFCLayer(samplesY.rows(), true);*/
+
+    //neural net #2
+    NN nn(samplesX.rows());
+	nn.addConvLayer(52,52,3,1,2,3,64);
+	nn.addFCLayer(samplesY.rows(), true);
 
     std::cout << "NN construction completed." << std::endl;
 
-    nn.train(samplesX, samplesY, 10, 0.001f, 0.95f, 250, false);
-
-    std::ofstream f;
-    f.open("nn.dat", std::ofstream::out | std::ofstream::binary);
-    nn.save(f);
-    f.close();
-
+    nn.train(samplesX, samplesY, 80, 0.001f, 0.95f, 250, saveNNCallback);
 
     return 0;
 }

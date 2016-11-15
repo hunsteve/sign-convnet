@@ -36,7 +36,7 @@ class NN {
 
     void train(const Eigen::MatrixXf& trainX, const Eigen::MatrixXf& trainY,
                int maxEpoch, float mu, float ratio, int minibatchSize,
-               bool isDebug);
+			   void(*epochEndCallback)(NN*, int)=NULL);
 
     void addConvLayer(int w, int h, int d, int stride, int padding, int K,
                       int N);
