@@ -23,7 +23,7 @@ It uses the following libraries and API-s:
 
     nn.train(samplesX, samplesY, 80, 0.001f, 0.95f, 250, saveNNCallback);
     
-where samplesX and samplesY are matrices storing the input and target output data, columntwise (one sample per column).
+where samplesX and samplesY are matrices storing the input and target output data, columntwise (one sample per column), saveNNCallback is a callback function that is called at the end of each epoch.
 
 ##How to classify an image of a traffic sign:
  - checkout the project
