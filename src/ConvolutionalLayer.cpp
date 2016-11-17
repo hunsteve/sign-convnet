@@ -23,7 +23,9 @@ ConvolutionalLayer::ConvolutionalLayer(int w, int h, int d, int stride,
       N(N),
 	  w(Eigen::MatrixXf::Random(N, K * K * dimension) * 0.1f),
 	  b(Eigen::VectorXf::Zero(N)),
-	  X(buildIM2COL()) {
+	  X(buildIM2COL()),
+	  adamW(this->w.rows(), this->w.cols()),
+	  adamB(this->b.rows(), this->b.cols()){
 }
 
 // Calculate a sparse matrix that does the im2col transformation
@@ -144,9 +146,8 @@ Eigen::MatrixXf ConvolutionalLayer::backprop(const Eigen::MatrixXf& error) {
 }
 
 void ConvolutionalLayer::applyWeightMod(float mu) {
-    // TODO: ADAM
-    w += deltaW * mu;
-    b += deltaB * mu;
+	w += mu * adamW.getWeightModification(deltaW);
+	b += mu * adamB.getWeightModification(deltaB);
 }
 
 int ConvolutionalLayer::getOutputSize() const {
@@ -195,4 +196,32 @@ ConvolutionalLayer* ConvolutionalLayer::load(std::istream& in) {
 	in.read(reinterpret_cast<char*>(c->w.data()), c->w.rows()*c->w.cols()*sizeof(float));
 	in.read(reinterpret_cast<char*>(c->b.data()), c->b.rows()*c->b.cols()*sizeof(float));
     return c;
+}
+
+int ConvolutionalLayer::getParameterCount() const {
+	return w.rows() * w.cols() + b.rows() * b.cols();
+}
+
+void ConvolutionalLayer::gradientCheck(int index, float epsilon, float* originalValue, float* originalDelta) {
+	if (index < w.rows() * w.cols()) {
+		*originalValue = w.data()[index];
+		*originalDelta = deltaW.data()[index];
+		w.data()[index] += epsilon;
+	}
+	else {
+		int index2 = index - w.rows() * w.cols();
+		*originalValue = b.data()[index2];
+		*originalDelta = deltaB.data()[index2];
+		b.data()[index2] += epsilon;
+	}
+}
+
+void ConvolutionalLayer::gradientCheckReset(int index, float originalValue) {
+	if (index < w.rows() * w.cols()) {
+		w.data()[index] = originalValue;
+	}
+	else {
+		int index2 = index - w.rows() * w.cols();
+		b.data()[index2] = originalValue;
+	}
 }

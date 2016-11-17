@@ -77,6 +77,21 @@ void saveNNCallback(NN* nn, int epoch) {
 	f.close();
 }
 
+void perform_gradient_check() {
+	NN nn(20);
+	nn.addFCLayer(50);
+	nn.addFCLayer(50);
+	nn.addFCLayer(3, true);
+	std::cout << "Gradient check on pure FC net, largest deviation: " << nn.gradientCheck() << std::endl;
+
+	NN nn2(300);
+	nn2.addConvLayer(10,10,3,1,2,3,5);
+	nn2.addConvLayer(2,1,3,10);
+	nn2.addFCLayer(50);
+	nn2.addFCLayer(3, true);
+	std::cout << "Gradient check on convnet, largest deviation: " << nn2.gradientCheck() << std::endl;
+}
+
 int main(int argc, char** argv) {
 
 	//if a command line argument is provided, it is considered as an input file
@@ -114,6 +129,8 @@ int main(int argc, char** argv) {
                 "with G++"
              << std::endl;
 
+    perform_gradient_check();
+
     const char* path = "/home/steve/Desktop/train-52x52/";
     // const char* path = "/home/steve/Desktop/train-52x52-small/";
     nftw(path, collect_files, 15, FTW_PHYS);
@@ -124,22 +141,21 @@ int main(int argc, char** argv) {
     BMPFilesToSamples(files, 52 * 52 * 3, 12, &samplesX, &samplesY);
 
     //neural net #1
-    /*NN nn(samplesX.rows());
+    NN nn(samplesX.rows());
     nn.addConvLayer(52,52,3,1,2,3,32);
     nn.addConvLayer(2,1,3,64);
     nn.addConvLayer(2,1,3,128);
     nn.addFCLayer(1000);
-    nn.addFCLayer(1000);
-    nn.addFCLayer(samplesY.rows(), true);*/
+    nn.addFCLayer(samplesY.rows(), true);
 
     //neural net #2
-    NN nn(samplesX.rows());
+    /*NN nn(samplesX.rows());
 	nn.addConvLayer(52,52,3,1,2,3,64);
-	nn.addFCLayer(samplesY.rows(), true);
+	nn.addFCLayer(samplesY.rows(), true);*/
 
     std::cout << "NN construction completed." << std::endl;
 
-    nn.train(samplesX, samplesY, 80, 0.001f, 0.95f, 250, saveNNCallback);
+    nn.train(samplesX, samplesY, 35, 0.001f, 0.95f, 125, saveNNCallback);
 
     return 0;
 }

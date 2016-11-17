@@ -11,6 +11,7 @@
 #include <iostream>
 #include "ConvolutionalLayer.h"
 #include "FullyConnectedLayer.h"
+#include <cmath>
 
 NN::NN(int inputSize) : inputSize(inputSize) {}
 
@@ -173,4 +174,26 @@ std::unique_ptr<NN> NN::load(std::istream& in) {
     }
 
     return nn;
+}
+
+float NN::gradientCheck() {
+	Eigen::MatrixXf input(Eigen::MatrixXf::Random(inputSize, 1));
+	Eigen::MatrixXf output = forward(input);
+	calcDeltas(Eigen::MatrixXf::Ones(output.rows(), output.cols()));
+	const float epsilon = 0.0001f;
+
+	float maxdev = 0;
+	for (size_t i = 0; i < layers.size(); ++i) {
+		for (int j=0; j<layers[i]->getParameterCount(); ++j) {
+			float originalValue;
+			float originalDelta;
+			layers[i]->gradientCheck(j, epsilon, &originalValue, &originalDelta);
+			Eigen::MatrixXf output2 = forward(input);
+			float finideDifference = (output2 - output).sum() / epsilon;
+			layers[i]->gradientCheckReset(j, originalValue);
+
+			maxdev = std::max(maxdev, std::abs(originalDelta - finideDifference));
+		}
+	}
+	return maxdev;
 }

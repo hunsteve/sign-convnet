@@ -11,6 +11,7 @@
 #include <ostream>
 #include "Eigen/Sparse"
 #include "Layer.h"
+#include "ADAM.h"
 
 class ConvolutionalLayer : public Layer {
    private:
@@ -25,6 +26,8 @@ class ConvolutionalLayer : public Layer {
     const int N;
     Eigen::MatrixXf w;
     Eigen::VectorXf b;
+    ADAM adamW;
+    ADAM adamB;
 
     Eigen::MatrixXf s;
     Eigen::MatrixXf inp;
@@ -49,6 +52,11 @@ class ConvolutionalLayer : public Layer {
 
     void save(std::ostream& out) const;
     static ConvolutionalLayer* load(std::istream& in);
+
+
+    int getParameterCount() const;
+    void gradientCheck(int index, float epsilon, float* originalValue, float* originalDelta);
+    void gradientCheckReset(int index, float originalValue);
 };
 
 #endif /* CONVOLUTIONALLAYER_H_ */

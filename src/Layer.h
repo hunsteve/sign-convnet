@@ -20,6 +20,9 @@ class Layer {
     virtual int getOutputSize() const = 0;
 
     virtual void save(std::ostream& out) const = 0;
+    virtual int getParameterCount() const = 0;
+    virtual void gradientCheck(int index, float epsilon, float* originalValue, float* originalDelta) = 0;
+    virtual void gradientCheckReset(int index, float originalValue) = 0;
 };
 
 #endif /* LAYER_H_ */

@@ -11,12 +11,15 @@
 #include <istream>
 #include <ostream>
 #include "Layer.h"
+#include "ADAM.h"
 
 class FullyConnectedLayer : public Layer {
    private:
     bool isLinear;
     Eigen::MatrixXf w;
     Eigen::VectorXf b;
+    ADAM adamW;
+    ADAM adamB;
 
     Eigen::MatrixXf s;
     Eigen::MatrixXf inp;
@@ -33,6 +36,10 @@ class FullyConnectedLayer : public Layer {
 
     void save(std::ostream& out) const;
     static FullyConnectedLayer* load(std::istream& in);
+
+    int getParameterCount() const;
+    void gradientCheck(int index, float epsilon, float* originalValue, float* originalDelta);
+    void gradientCheckReset(int index, float originalValue);
 };
 
 #endif /* FULLYCONNECTEDLAYER_H_ */

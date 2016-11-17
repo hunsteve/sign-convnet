@@ -45,6 +45,8 @@ class NN {
 
     void save(std::ostream& out) const;
     static std::unique_ptr<NN> load(std::istream& in);
+
+    float gradientCheck();
 };
 
 #endif /* NN_H_ */

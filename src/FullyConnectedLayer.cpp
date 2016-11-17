@@ -11,7 +11,9 @@ FullyConnectedLayer::FullyConnectedLayer(int previousSize, int size,
                                          bool isLinear)
 	: isLinear(isLinear),
 	  w(Eigen::MatrixXf::Random(size, previousSize) * 0.1f),
-	  b(Eigen::VectorXf::Zero(size)) {
+	  b(Eigen::VectorXf::Zero(size)),
+	  adamW(this->w.rows(), this->w.cols()),
+	  adamB(this->b.rows(), this->b.cols()){
 }
 
 FullyConnectedLayer::~FullyConnectedLayer() {}
@@ -39,9 +41,8 @@ Eigen::MatrixXf FullyConnectedLayer::backprop(const Eigen::MatrixXf& error) {
 }
 
 void FullyConnectedLayer::applyWeightMod(float mu) {
-    // TODO: ADAM
-    w += deltaW * mu;
-    b += deltaB * mu;
+    w += mu * adamW.getWeightModification(deltaW);
+    b += mu * adamB.getWeightModification(deltaB);
 }
 
 int FullyConnectedLayer::getOutputSize() const {
@@ -71,4 +72,32 @@ FullyConnectedLayer* FullyConnectedLayer::load(std::istream& in) {
 	in.read(reinterpret_cast<char*>(f->b.data()), size*sizeof(float));
 
     return f;
+}
+
+int FullyConnectedLayer::getParameterCount() const {
+	return w.rows() * w.cols() + b.rows() * b.cols();
+}
+
+void FullyConnectedLayer::gradientCheck(int index, float epsilon, float* originalValue, float* originalDelta) {
+	if (index < w.rows() * w.cols()) {
+		*originalValue = w.data()[index];
+		*originalDelta = deltaW.data()[index];
+		w.data()[index] += epsilon;
+	}
+	else {
+		int index2 = index - w.rows() * w.cols();
+		*originalValue = b.data()[index2];
+		*originalDelta = deltaB.data()[index2];
+		b.data()[index2] += epsilon;
+	}
+}
+
+void FullyConnectedLayer::gradientCheckReset(int index, float originalValue) {
+	if (index < w.rows() * w.cols()) {
+		w.data()[index] = originalValue;
+	}
+	else {
+		int index2 = index - w.rows() * w.cols();
+		b.data()[index2] = originalValue;
+	}
 }
