@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
 
     std::cout << "NN construction completed." << std::endl;
 
-    nn.train(samplesX, samplesY, 35, 0.001f, 0.95f, 125, saveNNCallback);
+    nn.train(samplesX, samplesY, 5, 0.01f, 0.95f, 125, saveNNCallback);
 
     return 0;
 }
