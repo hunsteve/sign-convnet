@@ -54,7 +54,7 @@ Training parameters:
 
 Training took 3 hours on all 4 cores of an Intel i5-3570K.
 
-Performance: 99.4% accuracy (99.8% with learning rate = 0.01 and max epoch = 35) measured on the validation set
+Performance: 99.4% accuracy (99.8% with learning rate = 0.001 and max epoch = 35) measured on the validation set
 
 ##nn_small.dat details:
 - input: 52x52 3 channel bitmap
