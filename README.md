@@ -45,8 +45,8 @@ This will output one number, the class of the image, between 0 and 11 (original 
 - fully connected linear layer: 12 neuron -> outputs
 
 Training parameters: 
- - max epoch count = 35
- - learning rate = 0.001
+ - max epoch count = 5
+ - learning rate = 0.01
  - training samples: 57000
  - validation samples: 3000
  - minibatch size: 125
@@ -54,7 +54,7 @@ Training parameters:
 
 Training took 3 hours on all 4 cores of an Intel i5-3570K.
 
-Performance: 99.8% accuracy (measured on the validation set) 
+Performance: 99.4% accuracy (99.8% with learning rate = 0.01 and max epoch = 35) measured on the validation set
 
 ##nn_small.dat details:
 - input: 52x52 3 channel bitmap
